@@ -7,6 +7,26 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <vector>
+#include <sstream>
+
+std::vector<std::string> split_message(const std::string &message, const std::string& delim) {
+  std::vector<std::string> toks;
+  std::stringstream ss = std::stringstream{message};
+  std::string line;
+  while (getline(ss, line, *delim.begin())) {
+    toks.push_back(line);
+    ss.ignore(delim.length() - 1);
+  }
+  return toks;
+}
+
+std::string get_path(std::string request) {
+  std::vector<std::string> toks = split_message(request, "\r\n");
+  std::vector<std::string> path_toks = split_message(toks[0], " ");
+  return path_toks[1];
+}
+
 
 int main(int argc, char **argv) {
   // You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -59,10 +79,18 @@ int main(int argc, char **argv) {
   if (ret < 0) {
     std::cerr << "Error in reading from client socket" << std::endl;
   } else if (ret == 0) {
-    std::cout << "Nos bytes read" << std::endl;
+    std::cout << "No bytes read" << std::endl;
   } else {
-    std::cout << "Message: " << std::string(buffer) << std::endl;
-    std::string response = "HTTP/1.1 200 OK\r\n\r\n";
+    std::string request(buffer);
+    std::cout << "Request: " << request << std::endl;
+    std::string path = get_path(request);
+
+    std::string response;
+    if (path == "/") {
+      response = "HTTP/1.1 200 OK\r\n\r\n";
+    } else {
+      response = "HTTP/1.1 404 Not Found\r\n\r\n";
+    }
     write(client_fd, response.c_str(), response.length());
   }
   

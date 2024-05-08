@@ -85,9 +85,13 @@ int main(int argc, char **argv) {
     std::cout << "Request: " << request << std::endl;
     std::string path = get_path(request);
 
+
+    std::vector<std::string> split_paths = split_message(path, "/");
     std::string response;
     if (path == "/") {
       response = "HTTP/1.1 200 OK\r\n\r\n";
+    } else if (split_paths[0] == "echo") {
+      response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(split_paths[1].length()) + "\r\n\r\n" + split_paths[1];
     } else {
       response = "HTTP/1.1 404 Not Found\r\n\r\n";
     }

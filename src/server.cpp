@@ -47,8 +47,25 @@ int main(int argc, char **argv) {
   
   std::cout << "Waiting for a client to connect...\n";
   
-  accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
-  std::cout << "Client connected\n";
+  int client_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
+  if (client_fd < 0) {
+    std::cerr << "Error in accepting client" << std::endl;
+  } else {
+    std::cout << "Client connected\n";
+  }
+
+  char buffer[1024];
+  int ret = read(client_fd, buffer, sizeof(buffer));
+  if (ret < 0) {
+    std::cerr << "Error in reading from client socket" << std::endl;
+  } else if (ret == 0) {
+    std::cout << "Nos bytes read" << std::endl;
+  } else {
+    std::cout << "Message: " << std::string(buffer) << std::endl;
+    std::string response = "HTTP/1.1 200 OK\r\n\r\n";
+    write(client_fd, response.c_str(), response.length());
+  }
+  
   
   close(server_fd);
 

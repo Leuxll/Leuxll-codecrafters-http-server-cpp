@@ -91,6 +91,8 @@ int main(int argc, char **argv) {
     } else {
       response = "HTTP/1.1 404 Not Found\r\n\r\n";
     }
+    
+    std::cout << "Response: " << response << std::endl;
     write(client_fd, response.c_str(), response.length());
   }
   

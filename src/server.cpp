@@ -71,6 +71,7 @@ void handle_client(int client_fd) {
     std::cout << "Response: " << response << std::endl;
     write(client_fd, response.c_str(), response.length());
   }
+  close(client_fd);
 }
 
 int main(int argc, char **argv) {

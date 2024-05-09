@@ -9,6 +9,7 @@
 #include <netdb.h>
 #include <vector>
 #include <sstream>
+#include <thread>
 
 std::vector<std::string> split_message(const std::string &message, const std::string& delim) {
   std::vector<std::string> toks;
@@ -54,6 +55,24 @@ std::string generate_response(std::vector<std::string> parsed_message) {
 
 }
 
+void handle_client(int client_fd) {
+  char buffer[1024];
+  int ret = read(client_fd, buffer, sizeof(buffer));
+  if (ret < 0) {
+    std::cerr << "Error in reading from client socket" << std::endl;
+  } else if (ret == 0) {
+    std::cout << "No bytes read" << std::endl;
+  } else {
+    std::string request(buffer);
+    std::cout << "Request: " << request << std::endl;
+
+    std::vector<std::string> parsed_message = split_message(request, "\r\n");
+    std::string response = generate_response(parsed_message);
+    std::cout << "Response: " << response << std::endl;
+    write(client_fd, response.c_str(), response.length());
+  }
+}
+
 int main(int argc, char **argv) {
   // You can use print statements as follows for debugging, they'll be visible when running tests.
   std::cout << "Logs from your program will appear here!\n";
@@ -92,28 +111,18 @@ int main(int argc, char **argv) {
   int client_addr_len = sizeof(client_addr);
   
   std::cout << "Waiting for a client to connect...\n";
-  
-  int client_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
-  if (client_fd < 0) {
-    std::cerr << "Error in accepting client" << std::endl;
-  } else {
-    std::cout << "Client connected\n";
-  }
 
-  char buffer[1024];
-  int ret = read(client_fd, buffer, sizeof(buffer));
-  if (ret < 0) {
-    std::cerr << "Error in reading from client socket" << std::endl;
-  } else if (ret == 0) {
-    std::cout << "No bytes read" << std::endl;
-  } else {
-    std::string request(buffer);
-    std::cout << "Request: " << request << std::endl;
+  while (true) {
+    int client_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
+    if (client_fd < 0) {
+      std::cerr << "Error in accepting client" << std::endl;
+    } else {
+      std::cout << "Client connected\n";
+    }
 
-    std::vector<std::string> parsed_message = split_message(request, "\r\n");
-    std::string response = generate_response(parsed_message);
-    std::cout << "Response: " << response << std::endl;
-    write(client_fd, response.c_str(), response.length());
+    std::thread new_thread(handle_client, client_fd);
+    new_thread.detach();
+
   }
   
   

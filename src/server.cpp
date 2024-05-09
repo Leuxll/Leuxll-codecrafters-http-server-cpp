@@ -9,6 +9,7 @@
 #include <netdb.h>
 #include <vector>
 #include <sstream>
+#include <format>
 
 std::vector<std::string> split_message(const std::string &message, const std::string& delim) {
   std::vector<std::string> toks;
@@ -21,12 +22,36 @@ std::vector<std::string> split_message(const std::string &message, const std::st
   return toks;
 }
 
-std::string get_path(std::string request) {
-  std::vector<std::string> toks = split_message(request, "\r\n");
-  std::vector<std::string> path_toks = split_message(toks[0], " ");
-  return path_toks[1];
-}
+std::string generate_response(std::vector<std::string> parsed_message) {
+  std::string first_line = parsed_message[0];
+  std::string path = split_message(first_line, " ")[1];
 
+  std::string response;
+  if (path == "/") {
+    response = "HTTP/1.1 200 OK\r\n\r\n";
+  } else if (path == "/user-agent") {
+    std::string third_line = parsed_message[2];
+    std::string user_agent = split_message(third_line, " ")[1];
+    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ";
+    response += std::to_string(user_agent.length());
+    response = response + "\r\n\r\n" + user_agent;
+  } else {
+
+    std::vector<std::string> split_path = split_message(path, "/");
+    if (split_path[1] == "echo") {
+      std::string echo_string = split_path[2];
+      response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ";
+      response += std::to_string(echo_string.length());
+      response = response + "\r\n\r\n" + echo_string;
+    } else {
+      response = "HTTP/1.1 404 Not Found\r\n\r\n";
+    }
+
+  }
+
+  return response;
+
+}
 
 int main(int argc, char **argv) {
   // You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -83,19 +108,9 @@ int main(int argc, char **argv) {
   } else {
     std::string request(buffer);
     std::cout << "Request: " << request << std::endl;
-    std::string path = get_path(request);
 
-
-    std::vector<std::string> split_paths = split_message(path, "/");
-    std::string response;
-    if (path == "/") {
-      response = "HTTP/1.1 200 OK\r\n\r\n";
-    } else if (split_paths[1] == "echo") {
-      response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: " + std::to_string(split_paths[2].length()) + "\r\n\r\n" + split_paths[2];
-    } else {
-      response = "HTTP/1.1 404 Not Found\r\n\r\n";
-    }
-    
+    std::vector<std::string> parsed_message = split_message(request, "/");
+    std::string response = generate_response(parsed_message);
     std::cout << "Response: " << response << std::endl;
     write(client_fd, response.c_str(), response.length());
   }

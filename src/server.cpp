@@ -25,6 +25,8 @@ std::string generate_response(std::vector<std::string> parsed_message) {
   std::string first_line = parsed_message[0];
   std::string path = split_message(first_line, " ")[1];
 
+  std::cout << first_line << std::endl;
+
   std::string response;
   if (path == "/") {
     response = "HTTP/1.1 200 OK\r\n\r\n";
@@ -108,7 +110,7 @@ int main(int argc, char **argv) {
     std::string request(buffer);
     std::cout << "Request: " << request << std::endl;
 
-    std::vector<std::string> parsed_message = split_message(request, "/");
+    std::vector<std::string> parsed_message = split_message(request, "\r\n");
     std::string response = generate_response(parsed_message);
     std::cout << "Response: " << response << std::endl;
     write(client_fd, response.c_str(), response.length());

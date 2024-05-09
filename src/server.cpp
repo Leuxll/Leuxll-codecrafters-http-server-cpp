@@ -9,7 +9,6 @@
 #include <netdb.h>
 #include <vector>
 #include <sstream>
-#include <format>
 
 std::vector<std::string> split_message(const std::string &message, const std::string& delim) {
   std::vector<std::string> toks;

@@ -22,7 +22,7 @@ std::vector<std::string> split_message(const std::string &message, const std::st
   return toks;
 }
 
-std::string generate_response(std::vector<std::string> parsed_message) {
+std::string generate_response(std::vector<std::string> parsed_message, std::string directory) {
   std::string first_line = parsed_message[0];
   std::string path = split_message(first_line, " ")[1];
 
@@ -45,6 +45,23 @@ std::string generate_response(std::vector<std::string> parsed_message) {
       response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ";
       response += std::to_string(echo_string.length());
       response = response + "\r\n\r\n" + echo_string;
+    } else if (split_path[1] == "files") {
+      std::string file_name = split_path[2];
+      std::string file_path = directory + "/" + file_name;
+      FILE *file = fopen(file_path.c_str(), "r");
+      if (file) {
+        fseek(file, 0, SEEK_END);
+        long file_size = ftell(file);
+        fseek(file, 0, SEEK_SET);
+        char *file_contents = (char *) malloc(file_size);
+        fread(file_contents, 1, file_size, file);
+        fclose(file);
+        response = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: ";
+        response += std::to_string(file_size);
+        response = response + "\r\n\r\n" + file_contents;
+      } else {
+        response = "HTTP/1.1 404 Not Found\r\n\r\n";
+      }
     } else {
       response = "HTTP/1.1 404 Not Found\r\n\r\n";
     }
@@ -55,7 +72,7 @@ std::string generate_response(std::vector<std::string> parsed_message) {
 
 }
 
-void handle_client(int client_fd) {
+void handle_client(int client_fd, std::string directory) {
   char buffer[1024];
   int ret = read(client_fd, buffer, sizeof(buffer));
   if (ret < 0) {
@@ -67,7 +84,7 @@ void handle_client(int client_fd) {
     std::cout << "Request: " << request << std::endl;
 
     std::vector<std::string> parsed_message = split_message(request, "\r\n");
-    std::string response = generate_response(parsed_message);
+    std::string response = generate_response(parsed_message, directory);
     std::cout << "Response: " << response << std::endl;
     write(client_fd, response.c_str(), response.length());
   }
@@ -75,6 +92,12 @@ void handle_client(int client_fd) {
 }
 
 int main(int argc, char **argv) {
+
+  std::string directory;
+  if (argc > 1) {
+    directory = argv[2];
+  }
+
   // You can use print statements as follows for debugging, they'll be visible when running tests.
   std::cout << "Logs from your program will appear here!\n";
 
@@ -121,7 +144,7 @@ int main(int argc, char **argv) {
       std::cout << "Client connected\n";
     }
 
-    std::thread new_thread(handle_client, client_fd);
+    std::thread new_thread(handle_client, client_fd, directory);
     new_thread.detach();
 
   }

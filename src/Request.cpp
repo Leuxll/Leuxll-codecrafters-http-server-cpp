@@ -23,13 +23,20 @@ Request::Request(std::string request, std::string directory) {
     user_agent = user_agent_toks[1];
 
     if (method == "POST") {
+        bool content_length_found = false;
         for (const auto& line : split_request) {
             if (line.find("Content-Length: ") == 0) {
                 int content_length = std::stoi(line.substr(16));
                 size_t body_start = request.find("\r\n\r\n") + 4;
                 body = request.substr(body_start, content_length);
+                content_length_found = true;
                 break;
             }
+        }
+        if (!content_length_found) {
+            // Handle the case where Content-Length header was not found
+            // You can set the body to an empty string or throw an exception
+            body = "";
         }
     }
 }

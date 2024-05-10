@@ -16,12 +16,13 @@
 
 void handle_client(int client_fd, std::string directory) {
   char buffer[1024];
-  int ret = read(client_fd, buffer, sizeof(buffer));
+  int ret = read(client_fd, buffer, sizeof(buffer) - 1); // leave space for null terminator
   if (ret < 0) {
     std::cerr << "Error in reading from client socket" << std::endl;
   } else if (ret == 0) {
     std::cout << "No bytes read" << std::endl;
   } else {
+    buffer[ret] = '\0'; // null terminate the string
     std::string request(buffer);
     std::cout << "Request: " << request << std::endl;
 

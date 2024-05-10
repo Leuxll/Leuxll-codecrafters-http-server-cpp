@@ -60,13 +60,9 @@ Response::Response(Request req) {
 
 std::string Response::generate_response() {
     std::string response = status;
-    if (content_type != "") {
-        response += "\r\n" "Content-Type: " + content_type;
-        response += "\r\n" "Content-Length: " + std::to_string(content_length);
-    }
+    response += "\r\nContent-Type: " + (content_type.empty() ? "text/plain" : content_type);
+    response += "\r\nContent-Length: " + std::to_string(body.size());
     response += "\r\n\r\n";  // Always add the empty line after the headers
-    if (body != "") {
-        response += body;
-    }
+    response += body;
     return response;
 }

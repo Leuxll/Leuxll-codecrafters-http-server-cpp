@@ -52,11 +52,10 @@ Response::Response(Request req) {
         FILE *file = fopen(file_path.c_str(), "w");
         if (file) {
             std::string body = req.get_body();
-            body.push_back('\0');
-            fwrite(body.c_str(), 1, body.length(), file);
+            fwrite(body.c_str(), 1, body.length(), file);  // Only write body.length() bytes
             fclose(file);
-        }
     }
+}
 }
 
 std::string Response::generate_response() {

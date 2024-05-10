@@ -97,7 +97,8 @@ int main(int argc, char **argv) {
         std::cout << "Client connected\n";
     }
 
-    std::thread client_thread(handle_client, std::move(client_fd), directory);
+    int* new_client_fd = new int(client_fd);
+    std::thread client_thread(handle_client, std::move(*new_client_fd), directory);
     client_thread.detach();
   }
   

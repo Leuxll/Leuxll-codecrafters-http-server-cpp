@@ -54,8 +54,8 @@ Response::Response(Request req) {
             std::string body = req.get_body();
             fwrite(body.c_str(), 1, body.length(), file);  // Only write body.length() bytes
             fclose(file);
+        }   
     }
-}
 }
 
 std::string Response::generate_response() {
@@ -65,6 +65,8 @@ std::string Response::generate_response() {
         response += "\r\n" "Content-Length: " + std::to_string(content_length);
     }
     response += "\r\n\r\n";  // Always add the empty line after the headers
-    response += std::string(body.c_str()); // Ensure null-termination
+    if (body != "") {
+        response += body;
+    }
     return response;
 }

@@ -65,6 +65,6 @@ std::string Response::generate_response() {
         response += "\r\n" "Content-Length: " + std::to_string(content_length);
     }
     response += "\r\n\r\n";  // Always add the empty line after the headers
-    response += body;
+    response += std::string(body.c_str()); // Ensure null-termination
     return response;
 }

@@ -16,37 +16,45 @@
 
 void handle_client(int client_fd, std::string directory) {
   char buffer[1024];
-  int ret = read(client_fd, buffer, sizeof(buffer) - 1); // leave space for null terminator
-  if (ret < 0) {
-    std::cerr << "Error in reading from client socket" << std::endl;
-    close(client_fd);
-    return;
-  } else if (ret == 0) {
-    std::cout << "No bytes read" << std::endl;
-  } else {
-    buffer[ret] = '\0'; // null terminate the string
-    std::string request(buffer);
-    std::cout << "Request: " << request << std::endl;
-
-    Request req = Request(request, directory);
-    Response res = Response(req);
-    std::string response = res.generate_response();
-    std::cout << "Response: " << response << std::endl;
-    std::cout << "Response length: " << response.length() << std::endl;
-
-    size_t total_bytes_written = 0;
-    while (total_bytes_written < response.length()) {
-      int bytes_written = send(client_fd, response.c_str() + total_bytes_written, response.length() - total_bytes_written, MSG_NOSIGNAL);
-      if (bytes_written < 0) {
-        std::cerr << "Error in writing to client socket" << std::endl;
-        close(client_fd);
-        return;
+  std::string request;
+  while (true) {
+    int ret = read(client_fd, buffer, sizeof(buffer) - 1); // leave space for null terminator
+    if (ret < 0) {
+      std::cerr << "Error in reading from client socket" << std::endl;
+      close(client_fd);
+      return;
+    } else if (ret == 0) {
+      std::cout << "No bytes read" << std::endl;
+      break;
+    } else {
+      buffer[ret] = '\0'; // null terminate the string
+      request += buffer;
+      if (request.find("\r\n\r\n") != std::string::npos) {
+        break; // end of headers
       }
-      total_bytes_written += bytes_written;
     }
-
-    std::cout << "Bytes written: " << total_bytes_written << std::endl;
   }
+
+  std::cout << "Request: " << request << std::endl;
+
+  Request req = Request(request, directory);
+  Response res = Response(req);
+  std::string response = res.generate_response();
+  std::cout << "Response: " << response << std::endl;
+  std::cout << "Response length: " << response.length() << std::endl;
+
+  size_t total_bytes_written = 0;
+  while (total_bytes_written < response.length()) {
+    int bytes_written = send(client_fd, response.c_str() + total_bytes_written, response.length() - total_bytes_written, MSG_NOSIGNAL);
+    if (bytes_written < 0) {
+      std::cerr << "Error in writing to client socket" << std::endl;
+      close(client_fd);
+      return;
+    }
+    total_bytes_written += bytes_written;
+  }
+
+  std::cout << "Bytes written: " << total_bytes_written << std::endl;
 
   usleep(100000); // wait for 100ms
   close(client_fd);

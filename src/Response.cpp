@@ -46,13 +46,11 @@ Response::Response(Request req) {
         std::vector<std::string> split_path = split_message(req.get_path(), "/");
         std::string filename = split_path[2];
         std::string file_path = req.get_dir() + "/" + filename;
-
-        FILE *file = fopen(file_path.c_str(), "w");
+        std::ofstream file(file_path);
         if (file) {
             std::string body = req.get_body();
-            fwrite(body.c_str(), 1, body.length(), file);  // Only write body.length() bytes
-            fclose(file);
-        }   
+            file.write(body.c_str(), body.size());
+        }
     }
 }
 

@@ -1,5 +1,4 @@
 #include <string>
-#include <fstream>
 
 #include "include/Request.hpp"
 #include "include/Response.hpp"
@@ -25,20 +24,23 @@ Response::Response(Request req) {
             } else if (split_path[1] == "files") {
                 std::string file_name = split_path[2];
                 std::string file_path = req.get_dir() + "/" + file_name;
-                std::ifstream file(file_path, std::ios::binary | std::ios::ate);
+                FILE *file = fopen(file_path.c_str(), "r");
                 if (file) {
-                    std::streamsize file_size = file.tellg();
-                    file.seekg(0, std::ios::beg);
-                    std::vector<char> file_contents(file_size);
-                    if (file.read(file_contents.data(), file_size)) {
-                        status = "HTTP/1.1 200 OK";
-                        content_type = "application/octet-stream";
-                        body.assign(file_contents.begin(), file_contents.end());
-                        content_length = file_size;
-                    }
+                    fseek(file, 0, SEEK_END);
+                    long file_size = ftell(file);
+                    fseek(file, 0, SEEK_SET);
+                    char *file_contents = (char *) malloc(file_size);
+                    fread(file_contents, 1, file_size, file);
+                    fclose(file);
+                    status = "HTTP/1.1 200 OK";
+                    content_type = "application/octet-stream";
+                    body = file_contents;
+                    content_length = file_size;
                 } else {
                     status = "HTTP/1.1 404 Not Found";
                 }
+            } else {
+                status = "HTTP/1.1 404 Not Found";
             }
         }
     } else if (req.get_method() == "POST") {
@@ -46,19 +48,25 @@ Response::Response(Request req) {
         std::vector<std::string> split_path = split_message(req.get_path(), "/");
         std::string filename = split_path[2];
         std::string file_path = req.get_dir() + "/" + filename;
-        std::ofstream file(file_path);
+
+        FILE *file = fopen(file_path.c_str(), "w");
         if (file) {
             std::string body = req.get_body();
-            file.write(body.c_str(), body.size());
-        }
+            fwrite(body.c_str(), 1, body.length(), file);  // Only write body.length() bytes
+            fclose(file);
+        }   
     }
 }
 
 std::string Response::generate_response() {
     std::string response = status;
-    response += "\r\nContent-Type: " + (content_type.empty() ? "text/plain" : content_type);
-    response += "\r\nContent-Length: " + std::to_string(body.size());
+    if (content_type != "") {
+        response += "\r\n" "Content-Type: " + content_type;
+        response += "\r\n" "Content-Length: " + std::to_string(content_length);
+    }
     response += "\r\n\r\n";  // Always add the empty line after the headers
-    response += body;
+    if (body != "") {
+        response += body;
+    }
     return response;
 }

@@ -2,7 +2,7 @@
 #include <vector>
 #include <string>
 
-#include "Util.h"
+#include "include/Util.hpp"
 
 std::vector<std::string> split_message(const std::string &message, const std::string& delim) {
   std::vector<std::string> toks;

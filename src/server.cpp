@@ -30,6 +30,7 @@ void handle_client(int client_fd, std::string directory) {
     Response res = Response(req);
     std::string response = res.generate_response();
     std::cout << "Response: " << response << std::endl;
+    std::cout << "Response length: " << response.length() << std::endl;
     write(client_fd, response.c_str(), response.length());
   }
   close(client_fd);

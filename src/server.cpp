@@ -97,10 +97,9 @@ int main(int argc, char **argv) {
         std::cout << "Client connected\n";
     }
 
-    int* new_client_fd = new int(client_fd);
-    std::thread client_thread(handle_client, std::move(*new_client_fd), directory);
+    std::thread client_thread(handle_client, client_fd, "");
     client_thread.detach();
-  }
+}
   
   
   close(server_fd);

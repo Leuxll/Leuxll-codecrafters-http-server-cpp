@@ -1,4 +1,5 @@
 #include <string>
+#include <fstream>
 
 #include "include/Request.hpp"
 #include "include/Response.hpp"
@@ -24,23 +25,20 @@ Response::Response(Request req) {
             } else if (split_path[1] == "files") {
                 std::string file_name = split_path[2];
                 std::string file_path = req.get_dir() + "/" + file_name;
-                FILE *file = fopen(file_path.c_str(), "r");
+                std::ifstream file(file_path, std::ios::binary | std::ios::ate);
                 if (file) {
-                    fseek(file, 0, SEEK_END);
-                    long file_size = ftell(file);
-                    fseek(file, 0, SEEK_SET);
+                    std::streamsize file_size = file.tellg();
+                    file.seekg(0, std::ios::beg);
                     std::vector<char> file_contents(file_size);
-                    fread(file_contents.data(), 1, file_size, file);
-                    fclose(file);
-                    status = "HTTP/1.1 200 OK";
-                    content_type = "application/octet-stream";
-                    body.assign(file_contents.begin(), file_contents.end());
-                    content_length = file_size;
+                    if (file.read(file_contents.data(), file_size)) {
+                        status = "HTTP/1.1 200 OK";
+                        content_type = "application/octet-stream";
+                        body.assign(file_contents.begin(), file_contents.end());
+                        content_length = file_size;
+                    }
                 } else {
                     status = "HTTP/1.1 404 Not Found";
                 }
-            } else {
-                status = "HTTP/1.1 404 Not Found";
             }
         }
     } else if (req.get_method() == "POST") {

@@ -7,7 +7,7 @@
 Response::Response(Request req) {
     if (req.get_method() == "GET") {
         if (req.get_path() == "/") {
-            status = "HTTP/1.1 200 OK\r\n\r\n";
+            status = "HTTP/1.1 200 OK";
         } else if (req.get_path() == "/user-agent") {
             status = "HTTP/1.1 200 OK";
             content_type = "text/plain";
@@ -37,10 +37,10 @@ Response::Response(Request req) {
                     body = file_contents;
                     content_length = file_size;
                 } else {
-                    status = "HTTP/1.1 404 Not Found\r\n\r\n";
+                    status = "HTTP/1.1 404 Not Found";
                 }
             } else {
-                status = "HTTP/1.1 404 Not Found\r\n\r\n";
+                status = "HTTP/1.1 404 Not Found";
             }
         }
     } else if (req.get_method() == "POST") {
@@ -61,9 +61,10 @@ Response::Response(Request req) {
 std::string Response::generate_response() {
     std::string response = status;
     if (content_type != "") {
-        response += "\r\n" "Content-Type: " + content_type + "\r\n";
-        response += "Content-Length: " + std::to_string(content_length) + "\r\n\r\n";
+        response += "\r\n" "Content-Type: " + content_type;
+        response += "\r\n" "Content-Length: " + std::to_string(content_length);
     }
+    response += "\r\n\r\n";  // Always add the empty line after the headers
     response += body;
     return response;
 }

@@ -81,22 +81,10 @@ int main(int argc, char **argv) {
   
   std::cout << "Waiting for a client to connect...\n";
 
-  std::vector<std::thread> threads;
   while (true) {
-      int client_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
-      if (client_fd < 0) {
-          std::cerr << "Error in accepting client" << std::endl;
-      } else {
-          std::cout << "Client connected\n";
-      }
-
-      threads.push_back(std::thread(handle_client, client_fd, directory));
-  }
-
-  for (auto& th : threads) {
-      if (th.joinable()) {
-          th.join();
-      }
+    int client_fd = accept(server_fd, NULL, NULL);
+    std::thread client_thread(handle_client, client_fd);
+    client_thread.detach();
   }
   
   

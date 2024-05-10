@@ -1,7 +1,7 @@
 #include <string>
 
-#include "Request.hpp"
-#include "Response.hpp"
+#include "include/Request.hpp"
+#include "include/Response.hpp"
 #include "include/Util.hpp"
 
 Response::Response(Request req) {

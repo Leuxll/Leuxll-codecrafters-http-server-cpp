@@ -29,6 +29,7 @@ void handle_client(int client_fd, std::string directory) {
     Request req = Request(request, directory);
     Response res = Response(req);
     std::string response = res.generate_response();
+    response += "\r\n";
     std::cout << "Response: " << response << std::endl;
     write(client_fd, response.c_str(), response.length());
   }

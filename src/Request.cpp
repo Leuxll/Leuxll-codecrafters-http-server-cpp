@@ -26,12 +26,12 @@ Request::Request(std::string request, std::string directory) {
         for (const auto& line : split_request) {
             if (line.find("Content-Length: ") == 0) {
                 int content_length = std::stoi(line.substr(16));
-                body = request.substr(request.size() - content_length);
+                size_t body_start = request.find("\r\n\r\n") + 4;
+                body = request.substr(body_start, content_length);
                 break;
             }
         }
     }
-
 }
 
 std::string Request::get_method() {

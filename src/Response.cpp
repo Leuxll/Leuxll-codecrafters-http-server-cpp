@@ -29,12 +29,12 @@ Response::Response(Request req) {
                     fseek(file, 0, SEEK_END);
                     long file_size = ftell(file);
                     fseek(file, 0, SEEK_SET);
-                    char *file_contents = (char *) malloc(file_size);
-                    fread(file_contents, 1, file_size, file);
+                    std::vector<char> file_contents(file_size);
+                    fread(file_contents.data(), 1, file_size, file);
                     fclose(file);
                     status = "HTTP/1.1 200 OK";
                     content_type = "application/octet-stream";
-                    body = file_contents;
+                    body.assign(file_contents.begin(), file_contents.end());
                     content_length = file_size;
                 } else {
                     status = "HTTP/1.1 404 Not Found";

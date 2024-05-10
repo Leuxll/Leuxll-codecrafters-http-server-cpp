@@ -23,7 +23,13 @@ Request::Request(std::string request, std::string directory) {
     user_agent = user_agent_toks[1];
 
     if (method == "POST") {
-        body = split_request[split_request.size() - 1];
+        for (const auto& line : split_request) {
+            if (line.find("Content-Length: ") == 0) {
+                int content_length = std::stoi(line.substr(16));
+                body = request.substr(request.size() - content_length);
+                break;
+            }
+        }
     }
 
 }

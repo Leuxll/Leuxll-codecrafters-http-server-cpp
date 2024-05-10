@@ -14,7 +14,7 @@ class Response {
     std::string body;
 
     public:
-        Response::Response(Request request);
+        Response(Request request);
         std::string generate_response();
 };
 

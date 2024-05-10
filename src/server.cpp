@@ -33,13 +33,11 @@ void handle_client(int client_fd, std::string directory) {
     std::cout << "Response length: " << response.length() << std::endl;
 
     int bytes_written = write(client_fd, response.c_str(), response.length());
-      std::cout << "Bytes written: " << bytes_written << std::endl;
+    std::cout << "Bytes written: " << bytes_written << std::endl;
 
-      if (bytes_written != response.length()) {
+    if (bytes_written != response.length()) {
         std::cerr << "Error: did not write all bytes to client" << std::endl;
     }
-
-    write(client_fd, response.c_str(), response.length());
   }
   close(client_fd);
 }

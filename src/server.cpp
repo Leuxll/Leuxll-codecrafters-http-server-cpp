@@ -36,7 +36,7 @@ void handle_client(int client_fd, std::string directory) {
 
     size_t total_bytes_written = 0;
     while (total_bytes_written < response.length()) {
-      int bytes_written = write(client_fd, response.c_str() + total_bytes_written, response.length() - total_bytes_written);
+      int bytes_written = send(client_fd, response.c_str() + total_bytes_written, response.length() - total_bytes_written, MSG_NOSIGNAL);
       if (bytes_written < 0) {
         std::cerr << "Error in writing to client socket" << std::endl;
         close(client_fd);

@@ -11,66 +11,8 @@
 #include <sstream>
 #include <thread>
 
-std::vector<std::string> split_message(const std::string &message, const std::string& delim) {
-  std::vector<std::string> toks;
-  std::stringstream ss = std::stringstream{message};
-  std::string line;
-  while (getline(ss, line, *delim.begin())) {
-    toks.push_back(line);
-    ss.ignore(delim.length() - 1);
-  }
-  return toks;
-}
-
-std::string generate_response(std::vector<std::string> parsed_message, std::string directory) {
-  std::string first_line = parsed_message[0];
-  std::string path = split_message(first_line, " ")[1];
-
-  std::cout << first_line << std::endl;
-
-  std::string response;
-  if (path == "/") {
-    response = "HTTP/1.1 200 OK\r\n\r\n";
-  } else if (path == "/user-agent") {
-    std::string third_line = parsed_message[2];
-    std::string user_agent = split_message(third_line, " ")[1];
-    response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ";
-    response += std::to_string(user_agent.length());
-    response = response + "\r\n\r\n" + user_agent;
-  } else {
-
-    std::vector<std::string> split_path = split_message(path, "/");
-    if (split_path[1] == "echo") {
-      std::string echo_string = split_path[2];
-      response = "HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: ";
-      response += std::to_string(echo_string.length());
-      response = response + "\r\n\r\n" + echo_string;
-    } else if (split_path[1] == "files") {
-      std::string file_name = split_path[2];
-      std::string file_path = directory + "/" + file_name;
-      FILE *file = fopen(file_path.c_str(), "r");
-      if (file) {
-        fseek(file, 0, SEEK_END);
-        long file_size = ftell(file);
-        fseek(file, 0, SEEK_SET);
-        char *file_contents = (char *) malloc(file_size);
-        fread(file_contents, 1, file_size, file);
-        fclose(file);
-        response = "HTTP/1.1 200 OK\r\nContent-Type: application/octet-stream\r\nContent-Length: ";
-        response += std::to_string(file_size);
-        response = response + "\r\n\r\n" + file_contents;
-      } else {
-        response = "HTTP/1.1 404 Not Found\r\n\r\n";
-      }
-    } else {
-      response = "HTTP/1.1 404 Not Found\r\n\r\n";
-    }
-
-  }
-
-  return response;
-
-}
+#include "include/Request.hpp"
+#include "include/Response.hpp"
 
 void handle_client(int client_fd, std::string directory) {
   char buffer[1024];
@@ -83,8 +25,9 @@ void handle_client(int client_fd, std::string directory) {
     std::string request(buffer);
     std::cout << "Request: " << request << std::endl;
 
-    std::vector<std::string> parsed_message = split_message(request, "\r\n");
-    std::string response = generate_response(parsed_message, directory);
+    Request req = Request(request, directory);
+    Response res = Response(req);
+    std::string response = res.generate_response();
     std::cout << "Response: " << response << std::endl;
     write(client_fd, response.c_str(), response.length());
   }
@@ -96,6 +39,8 @@ int main(int argc, char **argv) {
   std::string directory;
   if (argc > 1) {
     directory = argv[2];
+  } else {
+    directory = "";
   }
 
   // You can use print statements as follows for debugging, they'll be visible when running tests.

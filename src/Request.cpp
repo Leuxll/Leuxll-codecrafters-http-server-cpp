@@ -18,9 +18,11 @@ Request::Request(std::string request, std::string directory) {
     method = header_toks[0];
     path = header_toks[1];
 
-    std::string user_agent_line = split_request[2];
-    std::vector<std::string> user_agent_toks = split_message(user_agent_line, " ");
-    user_agent = user_agent_toks[1];
+    if (split_request[1].find("User-Agent: ") == 0) {
+        user_agent = split_request[1].substr(12);
+    } else {
+        user_agent = "";
+    }
 
     if (method == "POST") {
         bool content_length_found = false;

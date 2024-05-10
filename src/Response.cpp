@@ -51,7 +51,9 @@ Response::Response(Request req) {
 
         FILE *file = fopen(file_path.c_str(), "w");
         if (file) {
-            fwrite(req.get_body().c_str(), 1, req.get_body().length(), file);
+            std::string body = req.get_body();
+            body.push_back('\0');
+            fwrite(body.c_str(), 1, body.length(), file);
             fclose(file);
         }
     }

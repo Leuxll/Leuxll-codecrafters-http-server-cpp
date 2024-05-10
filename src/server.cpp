@@ -83,14 +83,14 @@ int main(int argc, char **argv) {
 
   std::vector<std::thread> threads;
   while (true) {
-    int client_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
-    if (client_fd < 0) {
-        std::cerr << "Error in accepting client" << std::endl;
-    } else {
-        std::cout << "Client connected\n";
-    }
+      int client_fd = accept(server_fd, (struct sockaddr *) &client_addr, (socklen_t *) &client_addr_len);
+      if (client_fd < 0) {
+          std::cerr << "Error in accepting client" << std::endl;
+      } else {
+          std::cout << "Client connected\n";
+      }
 
-    std::thread(handle_client, client_fd, directory).detach();
+      threads.push_back(std::thread(handle_client, client_fd, directory));
   }
 
   for (auto& th : threads) {
